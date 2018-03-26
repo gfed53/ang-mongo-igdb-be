@@ -1,5 +1,5 @@
 {
-  "name": "ang-mongo-igdb-backend",
+  "name": "ang-mongo-igdb-be",
   "version": "1.0.0",
   "description": "",
   "main": "server.js",
