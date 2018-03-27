@@ -1,4 +1,4 @@
-# GameHunter (Back End)
+# GameHunter (The Back End)
 
 ## Overview
 
