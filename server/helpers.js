@@ -63,10 +63,16 @@ function getPlatforms(offset = 0, platforms = null){
       });
 }
 
-function getRelatedGames(options, otherFilters, offset, i, limit, accumGames){
-  options.offset = offset;
+function getRelatedGames(config, callState){
+  console.log('config', config);
+  console.log('callState', callState);
 
-  const optionsMerged = {...options, ...otherFilters[i]};
+  let { baseOptions, otherFilters } = config;
+  let { offset, cycle, cycleLimit, accumGames } = callState;
+
+  baseOptions.offset = offset;
+
+  const optionsMerged = {...baseOptions, ...otherFilters[cycle]};
 
   return client.games(optionsMerged).then(response => {
 
@@ -79,9 +85,9 @@ function getRelatedGames(options, otherFilters, offset, i, limit, accumGames){
     accumGames = accumGames.concat(list);
 
     // TODO: maybe handle this differently if accumGames < some value, only we would bump the offset instead. 
-    if(i < limit){
-
-      return getRelatedGames(options, otherFilters, offset, i+1, limit, accumGames);
+    if(cycle < cycleLimit){
+      cycle++;
+      return getRelatedGames({ baseOptions, otherFilters }, { offset, cycle, cycleLimit, accumGames });
     } else {
       return accumGames;
     }

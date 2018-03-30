@@ -51,13 +51,13 @@ router.post('/search-related', function(req,res) {
     const game = req.body._game;
     const controls = req.body._controls;
 
-    const options = {
+    const baseOptions = {
         fields: '*',
         limit: 50
     }
 
-    // If user specified ordering, append to options obj here
-    if(controls.order){options.order = `${controls.order}:desc`;}
+    // If user specified ordering, append to baseOptions obj here
+    if(controls.order){baseOptions.order = `${controls.order}:desc`;}
 
 
     /*-----------------------------------------------------------
@@ -79,7 +79,7 @@ router.post('/search-related', function(req,res) {
     const otherFilters = [];
 
     // Genre filter.
-    if(genresParsed){ options['filter[genres][in]'] = genresParsed; }
+    if(genresParsed){ baseOptions['filter[genres][in]'] = genresParsed; }
 
     // Platform filters (pushed to otherFilters)
     if(controls && controls.selectedPlatformIDs.length){ otherFilters.push({'filter[platforms][any]': controls.selectedPlatformIDs}); }
@@ -104,10 +104,22 @@ router.post('/search-related', function(req,res) {
         otherFilters.push(dateRangeObj);
     }
 
+    const config = {
+        baseOptions,
+        otherFilters
+    }
+
+    const callState = {
+        offset: 0,
+        cycle: 0,
+        cycleLimit: config.otherFilters.length - 1,
+        accumGames: null
+    }
+
     /*-----------------------------------------------------------
     Our GET request
     */
-    helpers.getRelatedGames(options, otherFilters, 0, 0, otherFilters.length-1)
+    helpers.getRelatedGames(config, callState)
     .then(list => {
 
         // TODO: still need to make sure the base game does not appear in the related results. 
