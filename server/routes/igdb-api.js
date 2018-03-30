@@ -79,7 +79,9 @@ router.post('/search-related', function(req,res) {
     const otherFilters = [];
 
     // Genre filter.
-    if(genresParsed){ baseOptions['filter[genres][in]'] = genresParsed; }
+    // if(genresParsed){ baseOptions['filter[genres][in]'] = genresParsed; }
+    // Bring the WHOLE genres array into the recursive function, then parse the genres while in the function
+    if(game.genres){ baseOptions['filter[genres][in]'] = game.genres; }
 
     // Platform filters (pushed to otherFilters)
     if(controls && controls.selectedPlatformIDs.length){ otherFilters.push({'filter[platforms][any]': controls.selectedPlatformIDs}); }
@@ -106,34 +108,66 @@ router.post('/search-related', function(req,res) {
 
     const config = {
         baseOptions,
-        otherFilters
+        otherFilters,
+        game,
+        internals,
+        controls
     }
 
     const callState = {
         offset: 0,
-        cycle: 0,
+        cycle: {
+            // inner represents the cycle count based on calls per 'other filter' (platform, dates, etc).
+            inner: 0,
+            // outer represents the cycle count based on trying to yield more results by changing up the genres array.
+            outer: 0
+        },
         cycleLimit: config.otherFilters.length - 1,
         accumGames: null
+        // genreSelectionMemo: []
     }
 
     /*-----------------------------------------------------------
     Our GET request
     */
+
+    // while(callState.cycle.outer < 3){
+
+    // }
     helpers.getRelatedGames(config, callState)
     .then(list => {
 
-        // TODO: still need to make sure the base game does not appear in the related results. 
+        // while(callState.cycle.outer < 3){
 
-        if(controls){
-            list = helpers.mainPostFilter(
-                list, 
-                internals, 
-                controls,
-                game
-            );
-        }
+        // }
+        /*----------- Moved this into recursive function */
+        // if(controls){
+        //     list = helpers.mainPostFilter(
+        //         list, 
+        //         internals, 
+        //         controls,
+        //         game
+        //     );
+        // }
+
+        // if(list.length < 10){
+        //     console.log('we found nothing, sooo');
+        //     // Grab genresParsed
+        //     // Parse genres
+
+        //     config.baseOptions['filter[genres][in]'] = 
+        //         baseOptions['filter[genres][in]'] && baseOptions['filter[genres][in]'].length > 2 ? 
+        //         helpers.randPart(baseOptions['filter[genres][in]'],2) : 
+        //         baseOptions['filter[genres][in]'];
+
+        //     callState.cycle.outer++;
+        // } else {
+        //     res.json(list);
+        // }
 
         res.json(list);
+
+        
 
     }).catch(error => {
         throw error;

@@ -64,15 +64,23 @@ function getPlatforms(offset = 0, platforms = null){
 }
 
 function getRelatedGames(config, callState){
-  console.log('config', config);
-  console.log('callState', callState);
+  
+  // console.log('callState', callState);
 
   let { baseOptions, otherFilters } = config;
   let { offset, cycle, cycleLimit, accumGames } = callState;
 
-  baseOptions.offset = offset;
+  console.log('baseOptions', baseOptions);
+  console.log('otherFilters', otherFilters);
+  console.log('offset', offset);
+  console.log('cycle',cycle);
+  console.log('cycleLimit',cycleLimit);
 
-  const optionsMerged = {...baseOptions, ...otherFilters[cycle]};
+  config.baseOptions.offset = offset;
+
+  const optionsMerged = {...config.baseOptions, ...config.otherFilters[cycle.inner]};
+
+  console.log('optionsMerged',optionsMerged);
 
   return client.games(optionsMerged).then(response => {
 
@@ -84,12 +92,47 @@ function getRelatedGames(config, callState){
 
     accumGames = accumGames.concat(list);
 
-    // TODO: maybe handle this differently if accumGames < some value, only we would bump the offset instead. 
-    if(cycle < cycleLimit){
-      cycle++;
-      return getRelatedGames({ baseOptions, otherFilters }, { offset, cycle, cycleLimit, accumGames });
-    } else {
-      return accumGames;
+    console.log('accumGames.length',accumGames.length);
+    console.log('cycle.outer',cycle.outer);
+
+    if(cycle.inner < cycleLimit){
+      console.log('we continue inner iteration');
+      cycle.inner++;
+      return getRelatedGames(config, { offset, cycle, cycleLimit, accumGames });
+
+    } 
+    // else if(accumGames.length < 10 && cycle.outer < 3) {
+      
+    //   // Parse genres
+    //   // let genresParsed = 
+    //   // baseOptions['filter[genres][in]'] && baseOptions['filter[genres][in]'].length > 2 ? 
+    //   // randPart(baseOptions['filter[genres][in]'],2) : 
+    //   // baseOptions['filter[genres][in]'];
+
+    //   baseOptions['filter[genres][in]'] = genresParsed;
+
+    //   console.log("baseOptions now",baseOptions);
+
+    //   // Reset cycle.inner, since we now want to start all over with new array of genres.
+    //   cycle.inner = 0;
+
+    //   cycle.outer++;
+
+    //   return getRelatedGames({ baseOptions, otherFilters }, { offset, cycle, cycleLimit, accumGames });
+    // }
+    else {
+
+      let list = mainPostFilter(
+        accumGames,
+        config.internals,
+        config.controls,
+        config.game
+      );
+      if(list < 10){
+        console.log('not enough, do the genresParsed thing');
+        return list;
+      }
+      return list;
     }
     
   }).catch(error => {
