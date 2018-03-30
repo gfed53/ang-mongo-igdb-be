@@ -89,6 +89,7 @@ router.post('/search-related', function(req,res) {
         After range slider change, we're now expecting an array, where [0] = after and [1] = before
         Backend validation won't be needed if we use range slider, which limits what user can actually select..
     */
+    const maxYear = new Date().getFullYear() + 2;
     if(controls && controls.dateRange){
         const dateRangeObj = {};
         if(controls.dateRange[0] > 1950 && helpers.checkDateValid(controls.dateRange[0])){
@@ -96,8 +97,7 @@ router.post('/search-related', function(req,res) {
             dateRangeObj['filter[first_release_date][gte]'] = after;
             
         }
-        // TODO: 2020 hardcoded for now while testing, dynamically generate year two years from now.
-        if(controls.dateRange[1] < 2020 && helpers.checkDateValid(controls.dateRange[1])){
+        if(controls.dateRange[1] < maxYear && helpers.checkDateValid(controls.dateRange[1])){
             let before = helpers.formatDate(controls.dateRange[1], 'before');
             dateRangeObj['filter[first_release_date][lte]'] = before;
         }
