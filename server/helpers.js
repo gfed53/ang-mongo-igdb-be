@@ -1,10 +1,8 @@
 const _ = require('lodash');
 const moment = require('moment');
 const igdb = require('igdb-api-node').default;
-
 const config = require('./config');
 const client = igdb(config.KEYS.igdbKey);
-
 
 function getFormattedByYear(year, type){
   let intYear = parseInt(year);
@@ -32,15 +30,6 @@ function checkDateValid(year){
   return year >= 1950 && year <= latest;
 
 }
-
-// Converts 'YYYY' to 'YYYY-MM-DD'
-function formatDate(year,type){
-
-  return type === 'after' ? 
-  `${year}-01-01` :
-  `${parseInt(year)+1}-01-01`;
-}
-
 
 function randPart(collection, n){
   let shuffled = _.shuffle(collection);
@@ -102,51 +91,10 @@ function getRelatedGames(options, otherFilters, offset, i, limit, accumGames){
   });
 }
 
-// returns list of items where item.first_release_date >= date
-function filterDateAfter(list, date){
-  let after = moment(formatDate(date, 'after'));
-  return list.filter((item) => item.first_release_date >= after);
-}
 
-// returns list of items where item.first_release_date <= date
-function filterDateBefore(list, date){
-  let before = moment(formatDate(date, 'before'));
-  return list.filter((item) => item.first_release_date <= before);
-}
-
-// for game item to pass, it has to match EVERY perspective that is passed into the second argument array
-function filterPerspective(list, player_perspectives){
-  return list.filter((item) => isExactMatch(item.player_perspectives, player_perspectives));
-}
-
-// Filter list, checking if item in list contains at least one platform in platforms array
-function filterPlatforms(list, platforms){
-  return list.filter((item) => isPartialMatch(item.platforms, platforms));
-}
-
-// Filter list, checking if item in list has genres array that exactly matches genres param
-function filterGenresExact(list, genres){
-  return list.filter((item) => isExactMatch(item.genres, genres));
-}
-
-function unshiftGenresExact(list, genres){
-  return unshiftFiltered(list, (item) => isExactMatch(item.genres, genres) );
-}
-
-function unshiftPerspectivesExact(list, player_perspectives){
-  return unshiftFiltered(list, (item) => isExactMatch(item.player_perspectives, player_perspectives) );
-}
-
-function unshiftPerspectivesAny(list, player_perspectives){
-  return unshiftFiltered(list, (item) => isPartialMatch(item.player_perspectives, player_perspectives) );
-}
-
-function unshiftThemesInclusive(list, themes){
-  return unshiftFiltered(list, (item) => containsAll(item.themes, themes));
-}
 
 /*-----------------------------------------------------------
-Filter to be run after API returns initial list of games. Since we're creating separate API calls for certain individual filters (platforms, date), we'll get results that don't ALL meet the combined filter criteria. Also we'll have to worry about duplicate entries, so we need to remove those.
+  Filter to be run after API returns initial list of games. Since we're creating separate API calls for certain individual filters (platforms, date), we'll get results that don't ALL meet the combined filter criteria. Also we'll have to worry about duplicate entries, so we need to remove those.
 */
 function mainPostFilter(list, internals, controls, baseGame){
 
@@ -187,6 +135,57 @@ function mainPostFilter(list, internals, controls, baseGame){
 
 }
 
+// returns list of items where item.first_release_date >= date
+function filterDateAfter(list, date){
+  let after = moment(formatDate(date, 'after'));
+  return list.filter((item) => item.first_release_date >= after);
+}
+
+// returns list of items where item.first_release_date <= date
+function filterDateBefore(list, date){
+  let before = moment(formatDate(date, 'before'));
+  return list.filter((item) => item.first_release_date <= before);
+}
+
+// Converts 'YYYY' to 'YYYY-MM-DD'
+function formatDate(year,type){
+  
+    return type === 'after' ? 
+    `${year}-01-01` :
+    `${parseInt(year)+1}-01-01`;
+  }
+
+// For game item to pass, it has to match EVERY perspective that is passed into the second argument array
+function filterPerspective(list, player_perspectives){
+  return list.filter((item) => isExactMatch(item.player_perspectives, player_perspectives));
+}
+
+// Filter list, checking if item in list contains at least one platform in platforms array
+function filterPlatforms(list, platforms){
+  return list.filter((item) => isPartialMatch(item.platforms, platforms));
+}
+
+// Filter list, checking if item in list has genres array that exactly matches genres param
+function filterGenresExact(list, genres){
+  return list.filter((item) => isExactMatch(item.genres, genres));
+}
+
+function unshiftGenresExact(list, genres){
+  return unshiftFiltered(list, (item) => isExactMatch(item.genres, genres) );
+}
+
+function unshiftPerspectivesExact(list, player_perspectives){
+  return unshiftFiltered(list, (item) => isExactMatch(item.player_perspectives, player_perspectives) );
+}
+
+function unshiftPerspectivesAny(list, player_perspectives){
+  return unshiftFiltered(list, (item) => isPartialMatch(item.player_perspectives, player_perspectives) );
+}
+
+function unshiftThemesInclusive(list, themes){
+  return unshiftFiltered(list, (item) => containsAll(item.themes, themes));
+}
+
 // Returns true if arrays a and b have the exact same values
 function isExactMatch(a,b){
 
@@ -209,7 +208,6 @@ function isExactMatch(a,b){
     return false;
   }
 }
-
 
 // Returns true if arrays a and b have at least 1 match
 function isPartialMatch(a,b){
@@ -251,45 +249,42 @@ function unshiftFiltered(a, predicate) {
   return passing.concat(failing);
 }
 
-
 function filterDupsByProp(a, prop){
   /*-----------------------------------------------------------
-  Takes array a, and returns new array removing duplicate items of same property prop.
+    Takes array a, and returns new array removing duplicate items of same property prop.
 
-  /*
+    e.g.
 
-  e.g.
+    const items = [
+      {
+        id: 1,
+        name: 'Greg'
+      },
+      {
+        id: 2,
+        name: 'Kelvin'
+      },
+      {
+        id: 1,
+        name: 'Prometheus'
+      },
+      {
+        id: 3,
+        name: 'Matt'
+      },
+      {
+        id: 4,
+        name: 'Greg'
+      }
+      
+      ];
 
-  const items = [
-    {
-      id: 1,
-      name: 'Greg'
-    },
-    {
-      id: 2,
-      name: 'Kelvin'
-    },
-    {
-      id: 1,
-      name: 'Prometheus'
-    },
-    {
-      id: 3,
-      name: 'Matt'
-    },
-    {
-      id: 4,
-      name: 'Greg'
-    }
-    
-    ];
+      filterDupsByProp(items, 'id'); 
 
-    filterDupsByProp(items, 'id'); 
-
-    => [ { id: 1, name: 'Greg' },
-        { id: 2, name: 'Kelvin' },
-        { id: 3, name: 'Matt' },
-        { id: 4, name: 'Greg' } ]
+      => [ { id: 1, name: 'Greg' },
+          { id: 2, name: 'Kelvin' },
+          { id: 3, name: 'Matt' },
+          { id: 4, name: 'Greg' } ]
 
   */
   const memo = {};
@@ -306,8 +301,8 @@ function filterDupsByProp(a, prop){
 
 function filterById(a, id){
   /*-----------------------------------------------------------
-  Takes array a and returns filtered array where none of the items have an id of param id.
-  Used to filter out base game from the related results.
+    Takes array a and returns filtered array where none of the items have an id of param id.
+    Used to filter out base game from the related results.
   */
 
   return a.filter((item) => item.id !== id);

@@ -15,7 +15,7 @@ const Record = require('../models/Record.js');
 const client = igdb(config.KEYS.igdbKey);
 
 /*----------------------------------------------------------- 
-Initial search for individual game. This game will be used as a starting point to then retrieve more games related to this one.
+    Initial search for individual game. This game will be used as a starting point to then retrieve more games related to this one.
 */
 
 router.post('/search-game', function(req, res) {
@@ -61,7 +61,7 @@ router.post('/search-related', function(req,res) {
 
 
     /*-----------------------------------------------------------
-    'internals' is an object that contains certain properties of our base game that we may use for post-filtering/sorting, such as genres, player_perspectives, themes, and so on. This will be passed into our mainPostFilter function, more easily than a bunch of individual params.
+        'internals' is an object that contains certain properties of our base game that we may use for post-filtering/sorting, such as genres, player_perspectives, themes, and so on. This will be passed into our mainPostFilter function, more easily than a bunch of individual params.
     */
     const internals = {};
 
@@ -73,11 +73,8 @@ router.post('/search-related', function(req,res) {
     internals.themes = themesParsed;
     internals.player_perspectives = game.player_perspectives;
 
-    /************************************************************/
-
-
     /*-----------------------------------------------------------
-    'otherFilters' is an array that contains objects, each containing a specific extra filter (or in the case of date range, pair of filters). Point of this is to make separate API calls for each of these filters, then merge and purge, since API seems to have issues when you apply too many filters (more than 3 I think).
+        'otherFilters' is an array that contains objects, each containing a specific extra filter (or in the case of date range, pair of filters). Point of this is to make separate API calls for each of these filters, then merge and purge, since API seems to have issues when you apply too many filters (more than 3 I think).
     */
     const otherFilters = [];
 
@@ -87,9 +84,11 @@ router.post('/search-related', function(req,res) {
     // Platform filters (pushed to otherFilters)
     if(controls && controls.selectedPlatformIDs.length){ otherFilters.push({'filter[platforms][any]': controls.selectedPlatformIDs}); }
 
-    // Date Range Filters
-    // After range slider change, we're now expecting an array, where [0] = after and [1] = before
-    // Backend validation won't be needed if we use range slider, which limits what user can actually select..
+    /*-----------------------------------------------------------
+        Date Range Filters
+        After range slider change, we're now expecting an array, where [0] = after and [1] = before
+        Backend validation won't be needed if we use range slider, which limits what user can actually select..
+    */
     if(controls && controls.dateRange){
         const dateRangeObj = {};
         if(controls.dateRange[0] > 1950 && helpers.checkDateValid(controls.dateRange[0])){
@@ -104,9 +103,6 @@ router.post('/search-related', function(req,res) {
         }
         otherFilters.push(dateRangeObj);
     }
-
-    /************************************************************/
-
 
     /*-----------------------------------------------------------
     Our GET request
@@ -131,7 +127,7 @@ router.post('/search-related', function(req,res) {
         throw error;
     });
 
-    /************************************************************/
+    /*-------*/
 
 });
 
