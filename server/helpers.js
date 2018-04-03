@@ -93,6 +93,7 @@ function getRelatedGames(config, callState){
     accumGames = accumGames.concat(list);
 
     console.log('accumGames.length',accumGames.length);
+    console.log('list platforms',list.map(item => item.platforms));
     console.log('cycle.outer',cycle.outer);
 
     if(cycle.inner < cycleLimit){
@@ -100,39 +101,46 @@ function getRelatedGames(config, callState){
       cycle.inner++;
       return getRelatedGames(config, { offset, cycle, cycleLimit, accumGames });
 
-    } 
-    // else if(accumGames.length < 10 && cycle.outer < 3) {
-      
-    //   // Parse genres
-    //   // let genresParsed = 
-    //   // baseOptions['filter[genres][in]'] && baseOptions['filter[genres][in]'].length > 2 ? 
-    //   // randPart(baseOptions['filter[genres][in]'],2) : 
-    //   // baseOptions['filter[genres][in]'];
-
-    //   baseOptions['filter[genres][in]'] = genresParsed;
-
-    //   console.log("baseOptions now",baseOptions);
-
-    //   // Reset cycle.inner, since we now want to start all over with new array of genres.
-    //   cycle.inner = 0;
-
-    //   cycle.outer++;
-
-    //   return getRelatedGames({ baseOptions, otherFilters }, { offset, cycle, cycleLimit, accumGames });
-    // }
+    }
     else {
-
-      let list = mainPostFilter(
+      /* 
+        We've gone through all of our inner cycles. Regardless of how many results we get back, we will put the list through the mainPostFilter. 
+      */
+      accumGames = mainPostFilter(
         accumGames,
         config.internals,
         config.controls,
         config.game
       );
-      if(list < 10){
+
+      console.log('accumGames.length after parsing:',accumGames.length);
+      if(accumGames.length < 10 && cycle.outer < 1){
         console.log('not enough, do the genresParsed thing');
-        return list;
+        /* 
+          At this point, we want to reset the process (set the cycle.inner value back to 0) but with less stringent filtering. Since our first go-around checks for games that have ALL of the genre values of our base game, we will relax this filter.
+          
+          We will also keep track of these "outer" cycles with the cycle.outer value, so we increment this value by 1, and will limit outer cycles to 3 to avoid the risk of too many API requests. 
+        */
+
+        cycle.inner = 0;
+        cycle.outer++;
+
+        /* 
+          For now, let's actually ease the filtering just by switching the requirement of "all" genres of the base game existing with a related result, to just "any" genre of the base game. This would probably cause the results to now be too unrelated to the base game, but this will just be a test to make sure the general idea works.
+
+          The ultimate goal would be to more intelligently and incremently ease the genres filter by maybe a randomly selected two genre values of the genres array. We can maybe also stick with the "any" genre method, and then create a helper sort function that will sort the results by how many matching genre values the related result has with the base game.
+        */
+
+        config.baseOptions['filter[genres][any]'] = config.baseOptions['filter[genres][in]'];
+        delete config.baseOptions['filter[genres][in]'];
+        // accumGames = list;
+
+        return getRelatedGames(config, { offset, cycle, cycleLimit, accumGames });
+
+        // return list;
       }
-      return list;
+      // return list;
+      return accumGames;
     }
     
   }).catch(error => {
@@ -147,17 +155,33 @@ function getRelatedGames(config, callState){
 */
 function mainPostFilter(list, internals, controls, baseGame){
 
+  console.log('in mainPostFilter');
+  
+  console.log('internals',internals);
+  console.log('controls',controls);
+
+  console.log('list.length',list.length);
+
+  console.log('list platforms',list.map(item => item.platforms));
+  // console.log('baseGame',baseGame);
+
+
   if(controls.selectedPlatformIDs.length){
     list = filterPlatforms(list,controls.selectedPlatformIDs);
   }
+  console.log('list.length now',list.length);
 
   if(controls.dateRange[0]){
     list = filterDateAfter(list, controls.dateRange[0]);
   }
 
+  console.log('list.length now',list.length);
+
   if(controls.dateRange[1]){
     list = filterDateBefore(list, controls.dateRange[1]);
   }
+
+  console.log('list.length now',list.length);
 
   // Order matters here. The last unshift will take highest priority.
 
@@ -178,6 +202,9 @@ function mainPostFilter(list, internals, controls, baseGame){
 
   // Filter dups
   list = filterDupsByProp(list,'id');
+
+  console.log('list.length now',list.length);
+  console.log('returning..');
 
   // Filter out base game, and return
   return filterById(list, baseGame.id);

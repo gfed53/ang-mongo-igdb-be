@@ -69,7 +69,7 @@ router.post('/search-related', function(req,res) {
     const genresParsed = game.genres && game.genres.length > 2 ? helpers.randPart(game.genres,2) : game.genres;
     const themesParsed = game.themes && game.themes.length > 2 ? helpers.randPart(game.themes,2) : game.themes;
 
-    internals.genres = genresParsed;
+    internals.genres = game.genres;
     internals.themes = themesParsed;
     internals.player_perspectives = game.player_perspectives;
 
@@ -92,18 +92,26 @@ router.post('/search-related', function(req,res) {
         Backend validation won't be needed if we use range slider, which limits what user can actually select..
     */
     const maxYear = new Date().getFullYear() + 2;
-    if(controls && controls.dateRange){
+    console.log('controls.dateRange',controls.dateRange);
+    if(controls && controls.dateRange.length){
         const dateRangeObj = {};
         if(controls.dateRange[0] > 1950 && helpers.checkDateValid(controls.dateRange[0])){
             let after = helpers.formatDate(controls.dateRange[0], 'after');
             dateRangeObj['filter[first_release_date][gte]'] = after;
-            
         }
         if(controls.dateRange[1] < maxYear && helpers.checkDateValid(controls.dateRange[1])){
             let before = helpers.formatDate(controls.dateRange[1], 'before');
             dateRangeObj['filter[first_release_date][lte]'] = before;
         }
-        otherFilters.push(dateRangeObj);
+
+        // Problem: this object is being pushed into otherFilters whether or not dateRanges are being added. The empty object is being counted as a filter which generates an unnecessary API call with no actual other filters added.
+
+        console.log('Object.keys(dateRangeObj).length',Object.keys(dateRangeObj).length);
+
+        if(Object.keys(dateRangeObj).length){
+            otherFilters.push(dateRangeObj);
+        }
+        
     }
 
     const config = {
