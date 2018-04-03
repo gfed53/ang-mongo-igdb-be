@@ -63,18 +63,19 @@ function getPlatforms(offset = 0, platforms = null){
       });
 }
 
+/*-----------------------------------------------------------
+  CURRENTLY UPDATING.
+*/
 function getRelatedGames(config, callState){
-  
-  // console.log('callState', callState);
 
   let { baseOptions, otherFilters } = config;
   let { offset, cycle, cycleLimit, accumGames } = callState;
 
-  console.log('baseOptions', baseOptions);
-  console.log('otherFilters', otherFilters);
-  console.log('offset', offset);
-  console.log('cycle',cycle);
-  console.log('cycleLimit',cycleLimit);
+  // console.log('baseOptions', baseOptions);
+  // console.log('otherFilters', otherFilters);
+  // console.log('offset', offset);
+  // console.log('cycle',cycle);
+  // console.log('cycleLimit',cycleLimit);
 
   config.baseOptions.offset = offset;
 
@@ -94,7 +95,7 @@ function getRelatedGames(config, callState){
 
     console.log('accumGames.length',accumGames.length);
     console.log('list platforms',list.map(item => item.platforms));
-    console.log('cycle.outer',cycle.outer);
+    // console.log('cycle.outer',cycle.outer);
 
     if(cycle.inner < cycleLimit){
       console.log('we continue inner iteration');
@@ -115,7 +116,7 @@ function getRelatedGames(config, callState){
 
       console.log('accumGames.length after parsing:',accumGames.length);
       if(accumGames.length < 10 && cycle.outer < 1){
-        console.log('not enough, do the genresParsed thing');
+        console.log('not enough, relax the filtering..');
         /* 
           At this point, we want to reset the process (set the cycle.inner value back to 0) but with less stringent filtering. Since our first go-around checks for games that have ALL of the genre values of our base game, we will relax this filter.
           
