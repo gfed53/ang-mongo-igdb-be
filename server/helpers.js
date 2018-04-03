@@ -121,7 +121,7 @@ function getRelatedGames(config, callState){
       );
 
       console.log('accumGames.length after parsing:',accumGames.length);
-      if(accumGames.length < 10 && cycle.outer < 1){
+      if(accumGames.length < 10 && cycle.outer < 2){
         console.log('not enough, relax the filtering..');
         /* 
           At this point, we want to reset the process (set the cycle.inner value back to 0) but with less stringent filtering. Since our first go-around checks for games that have ALL of the genre values of our base game, we will relax this filter.
@@ -136,10 +136,27 @@ function getRelatedGames(config, callState){
           For now, let's actually ease the filtering just by switching the requirement of "all" genres of the base game existing with a related result, to just "any" genre of the base game. This would probably cause the results to now be too unrelated to the base game, but this will just be a test to make sure the general idea works.
 
           The ultimate goal would be to more intelligently and incremently ease the genres filter by maybe a randomly selected two genre values of the genres array. We can maybe also stick with the "any" genre method, and then create a helper sort function that will sort the results by how many matching genre values the related result has with the base game.
+
+          BUG: having [platforms][any] and [genres][any] ignores platform filter for some reason..
         */
 
-        config.baseOptions['filter[genres][any]'] = config.baseOptions['filter[genres][in]'];
-        delete config.baseOptions['filter[genres][in]'];
+        // config.baseOptions['filter[genres][any]'] = config.baseOptions['filter[genres][in]'];
+        // delete config.baseOptions['filter[genres][in]'];
+
+        let genresParsed;
+
+        if(cycle.outer < 2) { 
+          genresParsed = randPart(config.internals.genres, 2);
+        } else {
+          genresParsed = randPart(config.internals.genres, 1);
+        }
+
+        // let genresParsed = randPart(config.internals.genres, 2);
+        console.log('genresParsed',genresParsed);
+
+        config.baseOptions['filter[genres][in]'] = genresParsed;
+
+
         // accumGames = list;
 
         return getRelatedGames(config, { offset, cycle, cycleLimit, accumGames });
