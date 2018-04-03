@@ -85,6 +85,12 @@ function getRelatedGames(config, callState){
 
   return client.games(optionsMerged).then(response => {
 
+    // console.log('response',response);
+    // let testObj = { ...response };
+    // delete testObj.body;
+
+    // console.log('testObj',testObj);
+
     if(!accumGames){
       accumGames = [];
     }
@@ -186,19 +192,19 @@ function mainPostFilter(list, internals, controls, baseGame){
 
   // Order matters here. The last unshift will take highest priority.
 
-  // Perspective filters/rearrange
-  if(internals.player_perspectives){
-    list = unshiftPerspectivesExact(list, internals.player_perspectives);
-  }
-
-  // Themes filters/rearrange
+  // Themes sort
   if(internals.themes){
-    list = unshiftThemesInclusive(list, internals.themes);
+    list = sortByThemeMatch(list, internals.themes);
   }
 
-  // Genre post filters/rearrange
+  // Perspective sort
+  if(internals.player_perspectives){
+    list = sortByPerspectiveMatch(list, internals.player_perspectives);
+  }
+
+  // Genres sort
   if(internals.genres){
-    list = unshiftGenresExact(list, internals.genres);
+    list = sortByGenreMatch(list, internals.genres);
   }
 
   // Filter dups
@@ -247,6 +253,48 @@ function filterGenresExact(list, genres){
   return list.filter((item) => isExactMatch(item.genres, genres));
 }
 
+// Return new list sorted by similarity of player_perspective values between related result and base game.
+function sortByPerspectiveMatch(list, player_perspective){
+  return list.sort((a,b) => numberOfMatches(player_perspective, b.player_perspective) - numberOfMatches(player_perspective, a.player_perspective));
+}
+
+// Return new list sorted by similarity of theme values between related result and base game.
+function sortByThemeMatch(list, themes){
+  return list.sort((a,b) => numberOfMatches(themes, b.themes) - numberOfMatches(themes, a.themes));
+}
+
+// Return new list sorted by similarity of genre values between related result and base game.
+function sortByGenreMatch(list, genres){
+  return list.sort((a,b) => numberOfMatches(genres, b.genres) - numberOfMatches(genres, a.genres));
+}
+
+function numberOfMatches(a, b){
+  if(!a || !b){
+    return 0;
+  } else {
+    // We want to return the number of matches between a[collection] and b[collection].
+    let count = 0;
+    
+    let merged = _.uniq(
+      a.concat(b)
+       .sort((a,b) => a - b));
+    
+    // console.log('merged',merged);
+    
+    for(let i = 0; i < merged.length; i++){
+      let currentValue = merged[i];
+      if(a.indexOf(currentValue) > -1 && b.indexOf(currentValue) > -1){
+        count++;
+      } else {
+        count--;
+      }
+    }
+    
+    return count;
+    
+  }
+}
+
 function unshiftGenresExact(list, genres){
   return unshiftFiltered(list, (item) => isExactMatch(item.genres, genres) );
 }
@@ -263,9 +311,17 @@ function unshiftThemesInclusive(list, themes){
   return unshiftFiltered(list, (item) => containsAll(item.themes, themes));
 }
 
+// Returns array where items of a that pass predicate appear in the front
+function unshiftFiltered(a, predicate) {
+  let passing = a.filter(item => predicate(item));
+  let failing = a.filter(item => !predicate(item));
+  
+  return passing.concat(failing);
+}
+
 // Returns true if arrays a and b have the exact same values
 function isExactMatch(a,b){
-
+  
   // Some items don't have array to be used in comparison
   if(a){
     if(a.length !== b.length){
@@ -318,13 +374,7 @@ function containsAll(a,b){
   }
 }
 
-// Returns array where items of a that pass predicate appear in the front
-function unshiftFiltered(a, predicate) {
-  let passing = a.filter(item => predicate(item));
-  let failing = a.filter(item => !predicate(item));
-  
-  return passing.concat(failing);
-}
+
 
 function filterDupsByProp(a, prop){
   /*-----------------------------------------------------------
