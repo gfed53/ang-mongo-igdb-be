@@ -63,56 +63,27 @@ function getPlatforms(offset = 0, platforms = null){
       });
 }
 
-/*-----------------------------------------------------------
-  CURRENTLY UPDATING.
-*/
 function getRelatedGames(config, callState){
 
   let { baseOptions, otherFilters } = config;
   let { offset, cycle, cycleLimit, accumGames } = callState;
-
-  // console.log('baseOptions', baseOptions);
-  // console.log('otherFilters', otherFilters);
-  // console.log('offset', offset);
-  // console.log('cycle',cycle);
-  // console.log('cycleLimit',cycleLimit);
-
   config.baseOptions.offset = offset;
-
   const optionsMerged = {...config.baseOptions, ...config.otherFilters[cycle.inner]};
 
-  console.log('optionsMerged',optionsMerged);
-
   return client.games(optionsMerged).then(response => {
-
-    // console.log('response',response);
-    // let testObj = { ...response };
-    // delete testObj.body;
-
-    // console.log('testObj',testObj);
 
     if(!accumGames){
       accumGames = [];
     }
 
     let list = response.body;
-
     accumGames = accumGames.concat(list);
 
-    console.log('accumGames.length',accumGames.length);
-    console.log('list platforms',list.map(item => item.platforms));
-    // console.log('cycle.outer',cycle.outer);
-
     if(cycle.inner < cycleLimit){
-      console.log('we continue inner iteration');
       cycle.inner++;
       return getRelatedGames(config, { offset, cycle, cycleLimit, accumGames });
-
     }
     else {
-      /* 
-        We've gone through all of our inner cycles. Regardless of how many results we get back, we will put the list through the mainPostFilter. 
-      */
       accumGames = mainPostFilter(
         accumGames,
         config.internals,
@@ -120,50 +91,28 @@ function getRelatedGames(config, callState){
         config.game
       );
 
-      console.log('accumGames.length after parsing:',accumGames.length);
+      // We limit the outer cycling to 2 based on our strategy of relaxing the precision of our filtering. 
       if(accumGames.length < 10 && cycle.outer < 2){
-        console.log('not enough, relax the filtering..');
-        /* 
-          At this point, we want to reset the process (set the cycle.inner value back to 0) but with less stringent filtering. Since our first go-around checks for games that have ALL of the genre values of our base game, we will relax this filter.
-          
-          We will also keep track of these "outer" cycles with the cycle.outer value, so we increment this value by 1, and will limit outer cycles to 3 to avoid the risk of too many API requests. 
-        */
-
-        cycle.inner = 0;
-        cycle.outer++;
 
         /* 
-          For now, let's actually ease the filtering just by switching the requirement of "all" genres of the base game existing with a related result, to just "any" genre of the base game. This would probably cause the results to now be too unrelated to the base game, but this will just be a test to make sure the general idea works.
-
-          The ultimate goal would be to more intelligently and incremently ease the genres filter by maybe a randomly selected two genre values of the genres array. We can maybe also stick with the "any" genre method, and then create a helper sort function that will sort the results by how many matching genre values the related result has with the base game.
-
-          BUG: having [platforms][any] and [genres][any] ignores platform filter for some reason..
+          API BUG: having [platforms][any] and [genres][any] ignores platform filter for some reason.
         */
-
-        // config.baseOptions['filter[genres][any]'] = config.baseOptions['filter[genres][in]'];
-        // delete config.baseOptions['filter[genres][in]'];
 
         let genresParsed;
 
-        if(cycle.outer < 2) { 
+        if(cycle.outer < 1) { 
           genresParsed = randPart(config.internals.genres, 2);
         } else {
           genresParsed = randPart(config.internals.genres, 1);
         }
 
-        // let genresParsed = randPart(config.internals.genres, 2);
-        console.log('genresParsed',genresParsed);
+        cycle.inner = 0;
+        cycle.outer++;
 
         config.baseOptions['filter[genres][in]'] = genresParsed;
-
-
-        // accumGames = list;
-
         return getRelatedGames(config, { offset, cycle, cycleLimit, accumGames });
 
-        // return list;
       }
-      // return list;
       return accumGames;
     }
     
@@ -179,33 +128,33 @@ function getRelatedGames(config, callState){
 */
 function mainPostFilter(list, internals, controls, baseGame){
 
-  console.log('in mainPostFilter');
+  // console.log('in mainPostFilter');
   
-  console.log('internals',internals);
-  console.log('controls',controls);
+  // console.log('internals',internals);
+  // console.log('controls',controls);
 
-  console.log('list.length',list.length);
+  // console.log('list.length',list.length);
 
-  console.log('list platforms',list.map(item => item.platforms));
+  // console.log('list platforms',list.map(item => item.platforms));
   // console.log('baseGame',baseGame);
 
 
   if(controls.selectedPlatformIDs.length){
     list = filterPlatforms(list,controls.selectedPlatformIDs);
   }
-  console.log('list.length now',list.length);
+  // console.log('list.length now',list.length);
 
   if(controls.dateRange[0]){
     list = filterDateAfter(list, controls.dateRange[0]);
   }
 
-  console.log('list.length now',list.length);
+  // console.log('list.length now',list.length);
 
   if(controls.dateRange[1]){
     list = filterDateBefore(list, controls.dateRange[1]);
   }
 
-  console.log('list.length now',list.length);
+  // console.log('list.length now',list.length);
 
   // Order matters here. The last unshift will take highest priority.
 

@@ -70,7 +70,7 @@ router.post('/search-related', function(req,res) {
     const themesParsed = game.themes && game.themes.length > 2 ? helpers.randPart(game.themes,2) : game.themes;
 
     internals.genres = game.genres;
-    internals.themes = themesParsed;
+    internals.themes = game.themes;
     internals.player_perspectives = game.player_perspectives;
 
     /*-----------------------------------------------------------
@@ -92,7 +92,6 @@ router.post('/search-related', function(req,res) {
         Backend validation won't be needed if we use range slider, which limits what user can actually select..
     */
     const maxYear = new Date().getFullYear() + 2;
-    console.log('controls.dateRange',controls.dateRange);
     if(controls && controls.dateRange.length){
         const dateRangeObj = {};
         if(controls.dateRange[0] > 1950 && helpers.checkDateValid(controls.dateRange[0])){
@@ -103,10 +102,6 @@ router.post('/search-related', function(req,res) {
             let before = helpers.formatDate(controls.dateRange[1], 'before');
             dateRangeObj['filter[first_release_date][lte]'] = before;
         }
-
-        // Problem: this object is being pushed into otherFilters whether or not dateRanges are being added. The empty object is being counted as a filter which generates an unnecessary API call with no actual other filters added.
-
-        console.log('Object.keys(dateRangeObj).length',Object.keys(dateRangeObj).length);
 
         if(Object.keys(dateRangeObj).length){
             otherFilters.push(dateRangeObj);
@@ -132,50 +127,14 @@ router.post('/search-related', function(req,res) {
         },
         cycleLimit: config.otherFilters.length - 1,
         accumGames: null
-        // genreSelectionMemo: []
     }
 
     /*-----------------------------------------------------------
     Our GET request
     */
-
-    // while(callState.cycle.outer < 3){
-
-    // }
     helpers.getRelatedGames(config, callState)
     .then(list => {
-
-        // while(callState.cycle.outer < 3){
-
-        // }
-        /*----------- Moved this into recursive function */
-        // if(controls){
-        //     list = helpers.mainPostFilter(
-        //         list, 
-        //         internals, 
-        //         controls,
-        //         game
-        //     );
-        // }
-
-        // if(list.length < 10){
-        //     console.log('we found nothing, sooo');
-        //     // Grab genresParsed
-        //     // Parse genres
-
-        //     config.baseOptions['filter[genres][in]'] = 
-        //         baseOptions['filter[genres][in]'] && baseOptions['filter[genres][in]'].length > 2 ? 
-        //         helpers.randPart(baseOptions['filter[genres][in]'],2) : 
-        //         baseOptions['filter[genres][in]'];
-
-        //     callState.cycle.outer++;
-        // } else {
-        //     res.json(list);
-        // }
-
         res.json(list);
-
-        
 
     }).catch(error => {
         throw error;
