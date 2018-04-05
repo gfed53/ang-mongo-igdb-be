@@ -91,7 +91,10 @@ function getRelatedGames(config, callState){
         config.game
       );
 
-      // We limit the outer cycling to 2 based on our strategy of relaxing the precision of our filtering. 
+      /* 
+        We limit the outer cycling to 2 based on our strategy of relaxing the precision of our filtering. 
+        If we wanted to, for the future, we can make the limit higher than 2 so we can try a different randomly selected genre and see if we can yield more results (that are still related!).
+      */
       if(accumGames.length < 10 && cycle.outer < 2){
 
         /* 
@@ -175,9 +178,6 @@ function mainPostFilter(list, internals, controls, baseGame){
 
   // Filter dups
   list = filterDupsByProp(list,'id');
-
-  console.log('list.length now',list.length);
-  console.log('returning..');
 
   // Filter out base game, and return
   return filterById(list, baseGame.id);
