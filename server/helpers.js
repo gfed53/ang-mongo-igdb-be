@@ -86,9 +86,7 @@ function getRelatedGames(config, callState){
     else {
       accumGames = mainPostFilter(
         accumGames,
-        config.internals,
-        config.controls,
-        config.game
+        config
       );
 
       /* 
@@ -129,7 +127,9 @@ function getRelatedGames(config, callState){
 /*-----------------------------------------------------------
   Filter to be run after API returns initial list of games. Since we're creating separate API calls for certain individual filters (platforms, date), we'll get results that don't ALL meet the combined filter criteria. Also we'll have to worry about duplicate entries, so we need to remove those.
 */
-function mainPostFilter(list, internals, controls, baseGame){
+function mainPostFilter(list, config){
+
+  let { internals, controls, game } = config;
 
   // console.log('in mainPostFilter');
   
@@ -139,7 +139,7 @@ function mainPostFilter(list, internals, controls, baseGame){
   // console.log('list.length',list.length);
 
   // console.log('list platforms',list.map(item => item.platforms));
-  // console.log('baseGame',baseGame);
+  // console.log('game',game);
 
 
   if(controls.selectedPlatformIDs.length){
@@ -180,7 +180,7 @@ function mainPostFilter(list, internals, controls, baseGame){
   list = filterDupsByProp(list,'id');
 
   // Filter out base game, and return
-  return filterById(list, baseGame.id);
+  return filterById(list, game.id);
 
 }
 
@@ -285,10 +285,13 @@ function unshiftFiltered(a, predicate) {
   return passing.concat(failing);
 }
 
-// Returns true if arrays a and b have the exact same values
+// 
 function isExactMatch(a,b){
-  
-  // Some items don't have array to be used in comparison
+  /*-----------------------------------------------------------
+    Returns true if arrays a and b have the exact same values.
+  */
+
+  // Some items don't have array to be used in comparison, so we check that array a exists first.
   if(a){
     if(a.length !== b.length){
       return false;
@@ -308,9 +311,13 @@ function isExactMatch(a,b){
   }
 }
 
-// Returns true if arrays a and b have at least 1 match
+
 function isPartialMatch(a,b){
-  // Some items don't have array to be used in comparison
+  /*-----------------------------------------------------------
+    Returns true if arrays a and b have at least 1 match.
+  */
+
+  // Some items don't have array to be used in comparison, so we check that array a exists first.
   if(a){
     for(let i = 0; i < a.length; i++){
       for(let j = 0; j < b.length; j++){
@@ -325,9 +332,13 @@ function isPartialMatch(a,b){
   }
 }
 
-// Returns true if array a contains *at least* all items in array b
+// 
 function containsAll(a,b){
-  // Some items don't have array to be used in comparison
+  /*-----------------------------------------------------------
+    Returns true if array a contains at least all items in array b
+  */
+
+  // Some items don't have array to be used in comparison, so we check that array a exists first.
   if(a){
     for(let i = 0; i < b.length; i++){
       if(a.indexOf(b[i]) === -1){
@@ -344,41 +355,7 @@ function containsAll(a,b){
 
 function filterDupsByProp(a, prop){
   /*-----------------------------------------------------------
-    Takes array a, and returns new array removing duplicate items of same property prop.
-
-    e.g.
-
-    const items = [
-      {
-        id: 1,
-        name: 'Greg'
-      },
-      {
-        id: 2,
-        name: 'Kelvin'
-      },
-      {
-        id: 1,
-        name: 'Prometheus'
-      },
-      {
-        id: 3,
-        name: 'Matt'
-      },
-      {
-        id: 4,
-        name: 'Greg'
-      }
-      
-      ];
-
-      filterDupsByProp(items, 'id'); 
-
-      => [ { id: 1, name: 'Greg' },
-          { id: 2, name: 'Kelvin' },
-          { id: 3, name: 'Matt' },
-          { id: 4, name: 'Greg' } ]
-
+    Takes array a, and returns new array removing duplicate items of same prop.
   */
   const memo = {};
   const final = [];
