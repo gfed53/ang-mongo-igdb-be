@@ -4,38 +4,6 @@ const igdb = require('igdb-api-node').default;
 const config = require('./config');
 const client = igdb(config.KEYS.igdbKey);
 
-function getFormattedByYear(year, type){
-  let intYear = parseInt(year);
-  let latest = new Date().getFullYear() + 1;
-
-  // Backend validation
-  if(year >= 1950 && year <= latest){
-    return type === 'after' ?
-    `${year}-01-01T04:00:00.000Z` :
-
-    type === 'before' ?
-    `${parseInt(year+1)}-01-01T04:00:00.000Z` :
-
-    null;
-
-  } else {
-    return null;
-  } 
-}
-
-function checkDateValid(year){
-  let intYear = parseInt(year);
-  let latest = new Date().getFullYear() + 1;
-
-  return year >= 1950 && year <= latest;
-
-}
-
-function randPart(collection, n){
-  let shuffled = _.shuffle(collection);
-  return shuffled.slice(0,n);
-}
-
 function getPlatforms(offset = 0, platforms = null){
   return client.platforms({
           fields: 'id,name',
@@ -63,6 +31,12 @@ function getPlatforms(offset = 0, platforms = null){
       });
 }
 
+
+/*-----------------------------------------------------------
+  Note on API bugs (as of early 2018):
+    Because using too many filters in a single GET request causes some filters to not have any effect, we make
+    multiple calls based on what filters we have applied, hence the recursion and cycling.
+*/
 function getRelatedGames(config, callState){
 
   let { baseOptions, otherFilters } = config;
@@ -89,15 +63,14 @@ function getRelatedGames(config, callState){
         config
       );
 
-      /* 
+      /*-----------------------------------------------------------
         We limit the outer cycling to 2 based on our strategy of relaxing the precision of our filtering. 
         If we wanted to, for the future, we can make the limit higher than 2 so we can try a different randomly selected genre and see if we can yield more results (that are still related!).
       */
       if(accumGames.length < 10 && cycle.outer < 2){
 
-        /* 
-          API BUG: having [platforms][any] and [genres][any] ignores platform filter for some reason.
-        */
+        
+        // API BUG: having [platforms][any] and [genres][any] ignores platform filter for some reason. See above note.
 
         let genresParsed;
 
@@ -184,6 +157,11 @@ function mainPostFilter(list, config){
 
 }
 
+// Filter list, checking if item in list contains at least one platform in platforms array
+function filterPlatforms(list, platforms){
+  return list.filter((item) => isPartialMatch(item.platforms, platforms));
+}
+
 // returns list of items where item.first_release_date >= date
 function filterDateAfter(list, date){
   let after = moment(formatDate(date, 'after'));
@@ -198,21 +176,17 @@ function filterDateBefore(list, date){
 
 // Converts 'YYYY' to 'YYYY-MM-DD'
 function formatDate(year,type){
-  
-    return type === 'after' ? 
-    `${year}-01-01` :
-    `${parseInt(year)+1}-01-01`;
-  }
+  return type === 'after' ? 
+  `${year}-01-01` :
+  `${parseInt(year)+1}-01-01`;
+}
 
 // For game item to pass, it has to match EVERY perspective that is passed into the second argument array
 function filterPerspective(list, player_perspectives){
   return list.filter((item) => isExactMatch(item.player_perspectives, player_perspectives));
 }
 
-// Filter list, checking if item in list contains at least one platform in platforms array
-function filterPlatforms(list, platforms){
-  return list.filter((item) => isPartialMatch(item.platforms, platforms));
-}
+
 
 // Filter list, checking if item in list has genres array that exactly matches genres param
 function filterGenresExact(list, genres){
@@ -259,30 +233,6 @@ function numberOfMatches(a, b){
     return count;
     
   }
-}
-
-function unshiftGenresExact(list, genres){
-  return unshiftFiltered(list, (item) => isExactMatch(item.genres, genres) );
-}
-
-function unshiftPerspectivesExact(list, player_perspectives){
-  return unshiftFiltered(list, (item) => isExactMatch(item.player_perspectives, player_perspectives) );
-}
-
-function unshiftPerspectivesAny(list, player_perspectives){
-  return unshiftFiltered(list, (item) => isPartialMatch(item.player_perspectives, player_perspectives) );
-}
-
-function unshiftThemesInclusive(list, themes){
-  return unshiftFiltered(list, (item) => containsAll(item.themes, themes));
-}
-
-// Returns array where items of a that pass predicate appear in the front
-function unshiftFiltered(a, predicate) {
-  let passing = a.filter(item => predicate(item));
-  let failing = a.filter(item => !predicate(item));
-  
-  return passing.concat(failing);
 }
 
 // 
@@ -379,20 +329,50 @@ function filterById(a, id){
 
 }
 
+function randPart(collection, n){
+  let shuffled = _.shuffle(collection);
+  return shuffled.slice(0,n);
+}
+
+function getFormattedByYear(year, type){
+  let intYear = parseInt(year);
+  let latest = new Date().getFullYear() + 1;
+
+  // Backend validation
+  if(year >= 1950 && year <= latest){
+    return type === 'after' ?
+    `${year}-01-01T04:00:00.000Z` :
+
+    type === 'before' ?
+    `${parseInt(year+1)}-01-01T04:00:00.000Z` :
+
+    null;
+
+  } else {
+    return null;
+  } 
+}
+
+function checkDateValid(year){
+  let intYear = parseInt(year);
+  let latest = new Date().getFullYear() + 1;
+
+  return year >= 1950 && year <= latest;
+}
+
 const helpers = {
-  getFormattedByYear,
-  checkDateValid,
-  formatDate,
-  randPart,
   getPlatforms,
   getRelatedGames,
+  mainPostFilter,
   filterDateAfter,
   filterDateBefore,
+  formatDate,
   filterPerspective,
   filterPlatforms,
-  filterGenresExact,
-  unshiftGenresExact,
-  mainPostFilter
+  filterGenresExact, 
+  randPart,
+  getFormattedByYear,
+  checkDateValid
 };
 
 module.exports = helpers;
