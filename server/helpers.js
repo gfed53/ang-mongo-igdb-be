@@ -150,10 +150,10 @@ function mainPostFilter(list, config){
   }
 
   // Filter dups
-  list = filterDupsByProp(list,'id');
+  list = _.uniqBy(list, 'id');
 
   // Filter out base game, and return
-  return filterById(list, game.id);
+  return filterOutById(list, game.id);
 
 }
 
@@ -319,7 +319,7 @@ function filterDupsByProp(a, prop){
   return final;
 }
 
-function filterById(a, id){
+function filterOutById(a, id){
   /*-----------------------------------------------------------
     Takes array a and returns filtered array where none of the items have an id of param id.
     Used to filter out base game from the related results.
