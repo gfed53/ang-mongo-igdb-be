@@ -104,35 +104,19 @@ function mainPostFilter(list, config){
 
   let { internals, controls, game } = config;
 
-  // console.log('in mainPostFilter');
-  
-  // console.log('internals',internals);
-  // console.log('controls',controls);
-
-  // console.log('list.length',list.length);
-
-  // console.log('list platforms',list.map(item => item.platforms));
-  // console.log('game',game);
-
-
   if(controls.selectedPlatformIDs.length){
     list = filterPlatforms(list,controls.selectedPlatformIDs);
   }
-  // console.log('list.length now',list.length);
 
   if(controls.dateRange[0]){
     list = filterDateAfter(list, controls.dateRange[0]);
   }
 
-  // console.log('list.length now',list.length);
-
   if(controls.dateRange[1]){
     list = filterDateBefore(list, controls.dateRange[1]);
   }
 
-  // console.log('list.length now',list.length);
-
-  // Order matters here. The last unshift will take highest priority.
+  // Order matters here. The last sort will take highest priority.
 
   // Themes sort
   if(internals.themes){
@@ -186,8 +170,6 @@ function filterPerspective(list, player_perspectives){
   return list.filter((item) => isExactMatch(item.player_perspectives, player_perspectives));
 }
 
-
-
 // Filter list, checking if item in list has genres array that exactly matches genres param
 function filterGenresExact(list, genres){
   return list.filter((item) => isExactMatch(item.genres, genres));
@@ -218,9 +200,7 @@ function numberOfMatches(a, b){
     let merged = _.uniq(
       a.concat(b)
        .sort((a,b) => a - b));
-    
-    // console.log('merged',merged);
-    
+
     for(let i = 0; i < merged.length; i++){
       let currentValue = merged[i];
       if(a.indexOf(currentValue) > -1 && b.indexOf(currentValue) > -1){
@@ -235,7 +215,6 @@ function numberOfMatches(a, b){
   }
 }
 
-// 
 function isExactMatch(a,b){
   /*-----------------------------------------------------------
     Returns true if arrays a and b have the exact same values.
@@ -261,7 +240,6 @@ function isExactMatch(a,b){
   }
 }
 
-
 function isPartialMatch(a,b){
   /*-----------------------------------------------------------
     Returns true if arrays a and b have at least 1 match.
@@ -282,7 +260,6 @@ function isPartialMatch(a,b){
   }
 }
 
-// 
 function containsAll(a,b){
   /*-----------------------------------------------------------
     Returns true if array a contains at least all items in array b
@@ -301,24 +278,6 @@ function containsAll(a,b){
   }
 }
 
-
-
-function filterDupsByProp(a, prop){
-  /*-----------------------------------------------------------
-    Takes array a, and returns new array removing duplicate items of same prop.
-  */
-  const memo = {};
-  const final = [];
-  
-  a.forEach((item) => {
-    if(!memo[item[prop]]){
-      final.push(item);
-      memo[item[prop]] = true;
-    }
-  });
-  return final;
-}
-
 function filterOutById(a, id){
   /*-----------------------------------------------------------
     Takes array a and returns filtered array where none of the items have an id of param id.
@@ -329,8 +288,8 @@ function filterOutById(a, id){
 
 }
 
-function randPart(collection, n){
-  let shuffled = _.shuffle(collection);
+function randPart(a, n){
+  let shuffled = _.shuffle(a);
   return shuffled.slice(0,n);
 }
 

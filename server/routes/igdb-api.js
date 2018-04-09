@@ -65,10 +65,6 @@ router.post('/search-related', function(req,res) {
     */
     const internals = {};
 
-    // If game has more than 2 genres, randomly pluck out two genre ids of our base game.
-    const genresParsed = game.genres && game.genres.length > 2 ? helpers.randPart(game.genres,2) : game.genres;
-    const themesParsed = game.themes && game.themes.length > 2 ? helpers.randPart(game.themes,2) : game.themes;
-
     internals.genres = game.genres;
     internals.themes = game.themes;
     internals.player_perspectives = game.player_perspectives;
@@ -79,7 +75,6 @@ router.post('/search-related', function(req,res) {
     const otherFilters = [];
 
     // Genre filter.
-    // if(genresParsed){ baseOptions['filter[genres][in]'] = genresParsed; }
     // Bring the WHOLE genres array into the recursive function, then parse the genres while in the function
     if(game.genres){ baseOptions['filter[genres][in]'] = game.genres; }
 
