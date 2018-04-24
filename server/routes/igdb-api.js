@@ -81,28 +81,11 @@ router.post('/search-related', function(req,res) {
     // Platform filters (pushed to otherFilters)
     if(controls && controls.selectedPlatformIDs.length){ otherFilters.push({'filter[platforms][any]': controls.selectedPlatformIDs}); }
 
-    /*-----------------------------------------------------------
-        Date Range Filters
-        After range slider change, we're now expecting an array, where [0] = after and [1] = before
-        Backend validation won't be needed if we use range slider, which limits what user can actually select..
-    */
-    const maxYear = new Date().getFullYear() + 2;
-    if(controls && controls.dateRange.length){
-        const dateRangeObj = {};
-        if(controls.dateRange[0] > 1950 && helpers.checkDateValid(controls.dateRange[0])){
-            let after = helpers.formatDate(controls.dateRange[0], 'after');
-            dateRangeObj['filter[first_release_date][gte]'] = after;
-        }
-        if(controls.dateRange[1] < maxYear && helpers.checkDateValid(controls.dateRange[1])){
-            let before = helpers.formatDate(controls.dateRange[1], 'before');
-            dateRangeObj['filter[first_release_date][lte]'] = before;
-        }
-
-        if(Object.keys(dateRangeObj).length){
-            otherFilters.push(dateRangeObj);
-        }
-        
-    }
+    
+    
+    // Date Range Filter
+    const dateRangeObj = helpers.createDateRangeObj(controls);
+    if(Object.keys(dateRangeObj).length){ otherFilters.push(dateRangeObj); }
 
     const config = {
         baseOptions,
