@@ -85,7 +85,7 @@ router.post('/search-related', function(req,res) {
     
     // Date Range Filter
     const dateRangeObj = helpers.createDateRangeObj(controls);
-    if(Object.keys(dateRangeObj).length){ otherFilters.push(dateRangeObj); }
+    if(dateRangeObj && Object.keys(dateRangeObj).length){ otherFilters.push(dateRangeObj); }
 
     const config = {
         baseOptions,
