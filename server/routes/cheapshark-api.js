@@ -9,12 +9,12 @@ router.post('/search-game-deal', (req, res) => {
   axios.get('http://www.cheapshark.com/api/1.0/games', {
     params: {
       title,
-      limit: 1
+      limit: 5
     }
   })
   .then((response) => {
-    console.log('response',response);
-    res.json(response.body);
+    console.log('response.data',response.data);
+    res.json(response.data);
   })
   .catch((error) => {
     console.log('error',error);
