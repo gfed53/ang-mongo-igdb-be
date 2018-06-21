@@ -11,6 +11,7 @@ const config = require('./server/config.js');
 
 // Get our API routes
 const igdb_api = require('./server/routes/igdb-api');
+const cheapshark_api = require('./server/routes/cheapshark-api');
 
 // Create express app
 const app = express();
@@ -25,6 +26,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
 // Set our api routes
 // app.use('/api', api);
 app.use('/igdb-api', igdb_api);
+app.use('/cheapshark-api', cheapshark_api);
 
 
 // Catch all other routes and return the index file
