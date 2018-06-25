@@ -5,14 +5,19 @@ const router = express.Router();
 router.post('/search-game-deal', (req, res) => {
 
   const title = req.body._title;
+  const steamID = req.body._steamID;
 
-  axios.get('http://www.cheapshark.com/api/1.0/games', {
-    params: {
-      title,
-      limit: 5,
-      exact: 1
-    }
-  })
+  console.log('steamID',steamID);
+
+  const params = {
+    title,
+    limit: 5,
+    exact: 1
+  }
+
+  if(steamID){ params.steamAppID = steamID; }
+
+  axios.get('http://www.cheapshark.com/api/1.0/games', {params})
   .then((response) => {
     console.log('response.data',response.data);
     res.json(response.data);
