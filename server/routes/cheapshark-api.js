@@ -7,8 +7,6 @@ router.post('/search-game-deal', (req, res) => {
   const title = req.body._title;
   const steamID = req.body._steamID;
 
-  console.log('steamID',steamID);
-
   const params = {
     title,
     limit: 5,
@@ -19,7 +17,6 @@ router.post('/search-game-deal', (req, res) => {
 
   axios.get('http://www.cheapshark.com/api/1.0/games', {params})
   .then((response) => {
-    console.log('response.data',response.data);
     res.json(response.data);
   })
   .catch((error) => {

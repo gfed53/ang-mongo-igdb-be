@@ -20,26 +20,14 @@ const app = express();
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
-// Point static path to dist
-// app.use(express.static(path.join(__dirname, 'dist')));
-
 // Set our api routes
-// app.use('/api', api);
 app.use('/igdb-api', igdb_api);
 app.use('/cheapshark-api', cheapshark_api);
 
-
-// Catch all other routes and return the index file
-// app.get('*', (req, res) => {
-//   res.sendFile(path.join(__dirname, 'dist/index.html'));
-// });
-
 app.set('port', config.PORT);
-
 
 // Create HTTP server.
 const server = http.createServer(app);
-
 
 //****** Mongoose
 
