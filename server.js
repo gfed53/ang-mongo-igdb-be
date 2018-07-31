@@ -20,7 +20,7 @@ const app = express();
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
-// Set our api routes
+// Set our API routes
 app.use('/igdb-api', igdb_api);
 app.use('/cheapshark-api', cheapshark_api);
 
